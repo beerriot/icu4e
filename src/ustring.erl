@@ -1,6 +1,7 @@
 -module(ustring).
 
 -export([new/1, new/2,
+         encoding/0,
          cmp/2,
          casecmp/2,
          toupper/1,
@@ -23,6 +24,9 @@ init() ->
             SoName = filename:join(Dir, ustring_nifs)
     end,
     erlang:load_nif(SoName, 0).
+
+encoding() ->
+    ?NATIVE.
 
 new(String, Encoding) when is_binary(String); is_list(String) ->
     case Encoding of
@@ -93,5 +97,7 @@ casecmp_test() ->
     ?assert(casecmp(new(<<"apple">>, latin1),
                     new(<<"Banana">>, latin1)) < 0).
 
+encoding_test() ->
+    ?assertEqual(encoding(), ?NATIVE).
 
 -endif.
