@@ -1,4 +1,6 @@
 priv/
+.eunit/
 *.beam
 *.o
+*~
 
