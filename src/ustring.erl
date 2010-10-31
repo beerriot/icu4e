@@ -5,7 +5,8 @@
          cmp/2,
          casecmp/2,
          toupper/1,
-         tolower/1]).
+         tolower/1,
+         length/2]).
 
 -on_load(init/0).
 
@@ -41,6 +42,11 @@ cmp(_String1, _String2) -> throw("NIF library not loaded").
 casecmp(_String, _String2) -> throw("NIF library not loaded").
 toupper(_String) -> throw("NIF library not loaded").
 tolower(_String) -> throw("NIF library not loaded").
+
+length(String, codeunits) when is_binary(String) ->
+    size(String) div 2;
+length(_String, graphemes) ->
+    throw("NIF library not loaded").
 
 %% ===================================================================
 %% EUnit tests
@@ -99,5 +105,30 @@ casecmp_test() ->
 
 encoding_test() ->
     ?assertEqual(encoding(), ?NATIVE).
+
+length_test() ->
+    %% these strings have different numbers of 16-bit codes,
+    %% but the same number of user-visible characters
+
+    %% have to specify literally, becuase new/2 will normalize
+    %% these strings to the same string
+    %% {Latin Capital A With Acute,
+    %%  Latin Captial A, Combining Acute Accent}
+    {Str1, Str2} = case ?NATIVE of
+                       {utf16,little} ->
+                           {<<16#c1, 16#00>>,
+                            <<16#41, 16#00, 16#01, 16#03>>};
+                       {utf16,big} ->
+                           {<<16#00, 16#c1>>,
+                            <<16#00, 16#41, 16#03, 16#01>>}
+                   end,
+
+    %% count 16-bit codes
+    ?assertEqual(1, ?MODULE:length(Str1, codeunits)),
+    ?assertEqual(2, ?MODULE:length(Str2, codeunits)),
+
+    %% count user-visible characters
+    ?assertEqual(1, ?MODULE:length(Str1, graphemes)),
+    ?assertEqual(1, ?MODULE:length(Str2, graphemes)).
 
 -endif.

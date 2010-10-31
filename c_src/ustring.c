@@ -3,6 +3,7 @@
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
 #include "unicode/unorm.h"
+#include "unicode/ubrk.h"
 
 /* Prototypes */
 ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
@@ -10,6 +11,7 @@ ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ustring_casecmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 
 ERL_NIF_TERM error_tuple(ErlNifEnv* env, const char* msg);
 
@@ -19,7 +21,8 @@ static ErlNifFunc nif_funcs[] =
     {"cmp", 2, ustring_cmp},
     {"casecmp", 2, ustring_casecmp},
     {"toupper", 1, ustring_toupper},
-    {"tolower", 1, ustring_tolower}
+    {"tolower", 1, ustring_tolower},
+    {"length", 2, ustring_length}
 };
 
 ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
@@ -160,7 +163,37 @@ ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
     return enif_make_binary(env, &lower);
 }
+ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+    ErlNifBinary bin;
+    char type[10];
+    int len;
+    UBreakIterator* iter;
+    UErrorCode ec = U_ZERO_ERROR;
 
+    if(!enif_inspect_binary(env, argv[0], &bin))
+        return enif_make_badarg(env);
+    if(!enif_get_atom(env, argv[1], type, 10))
+        return enif_make_badarg(env);
+
+    switch(type[0]) {
+    case 'c': /* codeunits */
+        return enif_make_int(env, bin.size/2);
+    case 'g': /* graphemes */
+        iter = ubrk_open(UBRK_CHARACTER, NULL,
+                         (UChar*)bin.data, bin.size/2, &ec);
+
+        if(U_FAILURE(ec))
+            return error_tuple(env, u_errorName(ec));
+
+        len = 0;
+        while(ubrk_next(iter) != UBRK_DONE)
+            len++;
+
+        return enif_make_int(env, len);
+    default: /* unknown length type */
+        return enif_make_badarg(env);
+    }
+}
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {
     return 0;
