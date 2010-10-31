@@ -130,7 +130,7 @@ basic_test() ->
     Str = <<"hello">>,
     UStr = new(Str, latin1),
     %% just make sure data came through in utf16
-    ?assertEqual(?UCB(UStr, ?NATIVE, latin1), Str).
+    ?assertEqual(Str, ?UCB(UStr, ?NATIVE, latin1)).
 
 %% Make sure that new/2 is normalizing inputs correctly
 norm_test() ->
@@ -140,24 +140,24 @@ norm_test() ->
     UStr1 = new(Str1, utf16),
     UStr2 = new(Str2, utf16),
     %% Str1 should be canonical - renormalization shouldn't change it
-    ?assertEqual(UStr1, ?UCB(Str1, utf32, ?NATIVE)),
+    ?assertEqual(?UCB(Str1, utf32, ?NATIVE), UStr1),
     %% Str2 should canonicalize to Str1
-    ?assertEqual(UStr2, UStr1).
+    ?assertEqual(UStr1, UStr2).
 
 %% Check that toupper/1 up-cases basic ASCII
 upper_test() ->
     UStr = toupper(new(<<"hello">>, latin1)),
-    ?assertEqual(?UCB(UStr, ?NATIVE, latin1), <<"HELLO">>).
+    ?assertEqual(<<"HELLO">>, ?UCB(UStr, ?NATIVE, latin1)).
 
 %% Check that toupper/1 up-cases basic non-ASCII Latin1
 nonascii_upper_test() ->
     UStr = toupper(new(<<"ü">>, latin1)),
-    ?assertEqual(?UCB(UStr, ?NATIVE, latin1), <<"Ü">>).
+    ?assertEqual(<<"Ü">>, ?UCB(UStr, ?NATIVE, latin1)).
 
 %% Check that tolower/1 down-cases basic ASCII
 lower_test() ->
     UStr = tolower(new(<<"GOODBYE">>, latin1)),
-    ?assertEqual(?UCB(UStr, ?NATIVE, latin1), <<"goodbye">>).
+    ?assertEqual(<<"goodbye">>, ?UCB(UStr, ?NATIVE, latin1)).
 
 %% Check that tolower/1 down-cases basic non-ASCII Latin1
 nonascii_lower_test() ->
@@ -185,7 +185,7 @@ casecmp_test() ->
 
 %% Make sure encoding/0 isn't lying
 encoding_test() ->
-    ?assertEqual(encoding(), ?NATIVE).
+    ?assertEqual(?NATIVE, encoding()).
 
 %% Check the different types of length against each other
 length_test() ->
