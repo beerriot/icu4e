@@ -3,4 +3,5 @@ priv/
 *.beam
 *.o
 *~
-
+doc/
+!doc/overview.eunit

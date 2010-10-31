@@ -1,0 +1,5 @@
+@reference See <a href="http://icu-project.org/">the ICU Project
+           homepage</a> for details about ICU.
+
+@doc This application provides functions for working with unicode strings,
+as NIFs using the ICU library.

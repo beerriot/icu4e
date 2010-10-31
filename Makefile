@@ -3,7 +3,7 @@ export ICU_CFLAGS=$(shell icu-config --cppflags-searchpath) \
 export ICU_LDFLAGS=$(shell icu-config --ldflags) \
                    $(shell icu-config --ldflags-icuio)
 
-.PHONY: clean test
+.PHONY: clean test doc
 
 all:
 	rebar compile
@@ -13,3 +13,6 @@ clean:
 
 test:
 	rebar eunit
+
+doc:
+	rebar doc

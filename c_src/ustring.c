@@ -1,4 +1,9 @@
-
+/*
+ * NIF implementations for ustring.erl
+ *
+ * All binaries passed to these functions should be UTF16-encoded,
+ * in the native endian.
+ */
 #include "erl_nif.h"
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
@@ -6,12 +11,18 @@
 #include "unicode/ubrk.h"
 
 /* Prototypes */
-ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM ustring_casecmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc,
+                         const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc,
+                         const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_casecmp(ErlNifEnv* env, int argc,
+                             const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc,
+                             const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc,
+                             const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
+                            const ERL_NIF_TERM argv[]);
 
 ERL_NIF_TERM error_tuple(ErlNifEnv* env, const char* msg);
 
@@ -25,8 +36,16 @@ static ErlNifFunc nif_funcs[] =
     {"length", 2, ustring_length}
 };
 
-ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
+/*
+ * Perform NFC normalization on the input string.
+ * Inputs:
+ *   0: binary(), the string to be normalized
+ * Outputs (one of):
+ *   binary(), normalized string
+ *   {'error', Reason::string()}, something went wrong
+ */
+ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc,
+                         const ERL_NIF_TERM argv[]) {
     ErlNifBinary norm, in;
     int32_t size, used;
     UErrorCode ec = U_ZERO_ERROR;
@@ -61,7 +80,20 @@ ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_binary(env, &norm);
 }
 
-ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+/*
+ * Compare two strings for bitwise equality. Non-equality sort
+ * ordering is done in code unit order.
+ * Inputs:
+ *   0: binary(), first string to be compared
+ *   1: binary(), second string to be compared
+ * Outputs (one of):
+ *   integer(), 0 if equal,
+ *              <0 if argv[0] < argv[1],
+ *              >0 if argv[0] > argv[1]
+ *   {'error', Reason::string()}, something went wrong
+ */
+ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc,
+                         const ERL_NIF_TERM argv[]) {
     ErlNifBinary stra, strb;
     int32_t result;
 
@@ -76,7 +108,21 @@ ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
     return enif_make_int(env, result);
 }
-ERL_NIF_TERM ustring_casecmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+/*
+ * Compare two strings for case-insensitive equality. Non-equality
+ * sort ordering is done in code unit order.
+ * Inputs:
+ *   0: binary(), first string to be compared
+ *   1: binary(), second string to be compared
+ * Outputs (one of):
+ *   integer(), 0 if equal,
+ *              <0 if argv[0] < argv[1],
+ *              >0 if argv[0] > argv[1]
+ *   {'error', Reason::string()}, something went wrong
+ */
+ERL_NIF_TERM ustring_casecmp(ErlNifEnv* env, int argc,
+                             const ERL_NIF_TERM argv[]) {
     ErlNifBinary stra, strb;
     int32_t result;
     UErrorCode ec = U_ZERO_ERROR;
@@ -95,7 +141,18 @@ ERL_NIF_TERM ustring_casecmp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
     return enif_make_int(env, result);
 }
-ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+/*
+ * Convert the characters in a string to their upper-case
+ * representations.
+ * Inputs:
+ *   0: binary(), string to be up-cased
+ * Outputs (one of):
+ *   binary(), the upper-case version of the input string
+ *   {'error', Reason::string()}, something went wrong
+ */
+ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc,
+                             const ERL_NIF_TERM argv[]) {
     ErlNifBinary upper, in;
     int32_t size, used;
     UErrorCode ec = U_ZERO_ERROR;
@@ -129,7 +186,18 @@ ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
     return enif_make_binary(env, &upper);
 }
-ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+/*
+ * Convert the characters in a string to their lowerr-case
+ * representations.
+ * Inputs:
+ *   0: binary(), string to be down-cased
+ * Outputs (one of):
+ *   binary(), the lower-case version of the input string
+ *   {'error', Reason::string()}, something went wrong
+ */
+ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc,
+                             const ERL_NIF_TERM argv[]) {
     ErlNifBinary lower, in;
     int32_t size, used;
     UErrorCode ec = U_ZERO_ERROR;
@@ -163,7 +231,21 @@ ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
     return enif_make_binary(env, &lower);
 }
-ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+/*
+ * Find the length of the input string.  Length is computed as the
+ * number of 16-bit characters if the "length type" parameter is the
+ * atom 'codeunits'.  Length is computed as the number of user-visible
+ * characters if the "length type" parameter is the atom 'graphemes'.
+ * Inputs:
+ *   0: binary(), the string to find the length of
+ *   1: atom(), either 'codeunits' or 'graphemes'
+ * Outputs (one of):
+ *   integer(), the length of the string
+ *   {'error', Reason::string()}, something went wrong
+ */
+ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
+                            const ERL_NIF_TERM argv[]) {
     ErlNifBinary bin;
     char type[10];
     int len;
@@ -177,6 +259,8 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
     switch(type[0]) {
     case 'c': /* codeunits */
+        /* this library assumes that binaries are whole-strings,
+           not null-terminated strings */
         return enif_make_int(env, bin.size/2);
     case 'g': /* graphemes */
         iter = ubrk_open(UBRK_CHARACTER, NULL,
@@ -194,11 +278,19 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 }
+
+/*
+ * Initialization of this library.  Does nothing at the moment.
+ */
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {
     return 0;
 }
 
+/*
+ * Wrap up the common error-tuple creation.  Creates an error tuple
+ * of the form {error, msg::string()}.
+ */
 ERL_NIF_TERM error_tuple(ErlNifEnv* env, const char* msg) {
     return enif_make_tuple2(env,
                             enif_make_atom(env, "error"),
