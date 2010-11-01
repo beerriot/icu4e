@@ -6,13 +6,13 @@ export ICU_LDFLAGS=$(shell icu-config --ldflags) \
 .PHONY: clean test doc
 
 all:
-	rebar compile
+	./rebar compile
 
 clean:
-	rebar clean
+	./rebar clean
 
 test:
-	rebar eunit
+	./rebar eunit
 
 doc:
-	rebar doc
+	./rebar doc
