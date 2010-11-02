@@ -27,7 +27,7 @@
  * All binaries passed to these functions should be UTF16-encoded,
  * in the native endian.
  */
-#include "erl_nif.h"
+#include "erl_nif_compat.h"
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
 #include "unicode/unorm.h"
@@ -78,26 +78,26 @@ ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc,
     size = in.size;
 
     do {
-        if(!enif_alloc_binary(env, size, &norm))
+        if(!enif_alloc_binary_compat(env, size, &norm))
             return error_tuple(env, "failed to alloc normalized binary");
 
         used = unorm_normalize((UChar*)in.data, in.size/2, UNORM_NFC, 0,
                                (UChar*)norm.data, norm.size/2, &ec);
         if (ec == U_BUFFER_OVERFLOW_ERROR) {
             /* enlarge buffer if it was too small */
-            enif_release_binary(env, &norm);
+            enif_release_binary_compat(env, &norm);
             size = used*2;
         }
     } while (ec == U_BUFFER_OVERFLOW_ERROR);
 
     if (U_FAILURE(ec)) {
-        enif_release_binary(env, &norm);
+        enif_release_binary_compat(env, &norm);
         return error_tuple(env, u_errorName(ec));
     }
 
     if (used*2 != size) {
         /* shrink binary if it was too large */
-        enif_realloc_binary(env, &norm, used*2);
+        enif_realloc_binary_compat(env, &norm, used*2);
     }
 
     return enif_make_binary(env, &norm);
@@ -185,26 +185,26 @@ ERL_NIF_TERM ustring_toupper(ErlNifEnv* env, int argc,
     size = in.size;
 
     do {
-        if (!enif_alloc_binary(env, size, &upper))
+        if (!enif_alloc_binary_compat(env, size, &upper))
             return error_tuple(env, "failed to alloc upper binary");
 
         used = u_strToUpper((UChar*)upper.data, upper.size/2,
                             (UChar*)in.data, in.size/2, NULL, &ec);
         if (ec == U_BUFFER_OVERFLOW_ERROR) {
             /* enlarge buffer if it was too small */
-            enif_release_binary(env, &upper);
+            enif_release_binary_compat(env, &upper);
             size = used*2;
         }
     } while (ec == U_BUFFER_OVERFLOW_ERROR);
 
     if (U_FAILURE(ec)) {
-        enif_release_binary(env, &upper);
+        enif_release_binary_compat(env, &upper);
         return error_tuple(env, u_errorName(ec));
     }
 
     if (used*2 != size) {
         /* shrink binary if it was too large */
-        enif_realloc_binary(env, &upper, used*2);
+        enif_realloc_binary_compat(env, &upper, used*2);
     }
 
     return enif_make_binary(env, &upper);
@@ -230,26 +230,26 @@ ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc,
     size = in.size;
 
     do {
-        if (!enif_alloc_binary(env, size, &lower))
+        if (!enif_alloc_binary_compat(env, size, &lower))
             return error_tuple(env, "failed to alloc lower binary");
 
         used = u_strToLower((UChar*)lower.data, lower.size/2,
                             (UChar*)in.data, in.size/2, NULL, &ec);
         if (ec == U_BUFFER_OVERFLOW_ERROR) {
             /* enlarge buffer if it was too small */
-            enif_release_binary(env, &lower);
+            enif_release_binary_compat(env, &lower);
             size = used*2;
         }
     } while (ec == U_BUFFER_OVERFLOW_ERROR);
 
     if (U_FAILURE(ec)) {
-        enif_release_binary(env, &lower);
+        enif_release_binary_compat(env, &lower);
         return error_tuple(env, u_errorName(ec));
     }
 
     if (used*2 != size) {
         /* shrink binary if it was too large */
-        enif_realloc_binary(env, &lower, used*2);
+        enif_realloc_binary_compat(env, &lower, used*2);
     }
 
     return enif_make_binary(env, &lower);
@@ -277,7 +277,7 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
 
     if(!enif_inspect_binary(env, argv[0], &bin))
         return enif_make_badarg(env);
-    if(!enif_get_atom(env, argv[1], type, 10))
+    if(!enif_get_atom_compat(env, argv[1], type, 10, ERL_NIF_LATIN1))
         return enif_make_badarg(env);
 
     switch(type[0]) {
