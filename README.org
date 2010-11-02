@@ -1,0 +1,49 @@
+icu4e: Erlang NIF wrappers around icu4c
+
+* Prerequisites
+
+  To use icu4e, you will need:
+
+  - Erlang/OTP R13B04
+  - icu4c version 4.x
+
+* Configuration
+
+  The 'ustring' module is configured to encode UTF16 in little-endian
+  format.  If your ICU installation uses big-endian encoding, edit
+  ustring.erl, and change the line:
+
+  ```
+  -define(NATIVE, {utf16, little}).
+  '''
+  
+  to read:
+
+  ```
+  -define(NATIVE, {utf16, big}).
+  '''
+
+* Building
+
+  To build icu4e, simply type 'make' at the commandline.
+
+* Using
+
+  To use icu4e, start the icu4e application:
+
+  ```
+  1> application:start(icu4e).
+  ok
+  '''
+
+  Then make calls to the ustring module:
+
+  ```
+  2> S = ustring:new(<<"hello">>, latin1).
+  <<104,0,101,0,108,0,108,0,111,0>>
+  3> U = ustring:toupper(S).
+  <<72,0,69,0,76,0,76,0,79,0>>
+  4> unicode:characters_to_binary(U, ustring:encoding(), latin1).
+  <<"HELLO">>
+  '''
+

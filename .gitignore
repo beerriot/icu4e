@@ -4,4 +4,4 @@ priv/
 *.o
 *~
 doc/
-!doc/overview.eunit
+!doc/overview.edoc
