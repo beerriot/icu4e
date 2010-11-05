@@ -33,13 +33,19 @@
 #include "unicode/ustring.h"
 #include "unicode/ubrk.h"
 
+/* These should be exactly the same as their coutnerparts in ubrk.erl */
+#define OPTION_DEFAULT      0
+#define OPTION_SKIP_BREAKS  1
+#define OPTION_INCLUDE_TAGS 2
+
 /* Prototypes */
-ERL_NIF_TERM ubrk_words(ErlNifEnv* env, int argc,
-                         const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ubrk_words_internal(ErlNifEnv* env, int argc,
+                                 const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM atom_for_tag(ErlNifEnv* env, int status);
 
 static ErlNifFunc nif_funcs[] =
 {
-    {"words", 1, ubrk_words}
+    {"words_internal", 2, ubrk_words_internal}
 };
 
 /*
@@ -47,19 +53,24 @@ static ErlNifFunc nif_funcs[] =
  * UBRK_WORD break iterator.
  * Inputs:
  *   0: binary(), the string to split
+ *   1: int(), return value options
  * Outputs (one of):
- *   [binary()], the words, broken up
+ *   [binary()]|[{atom(), binary()}], the words, broken up
+ *                                    possibly including tags
  *   {'error', Reason::string()}, something went wrong
  */
-ERL_NIF_TERM ubrk_words(ErlNifEnv* env, int argc,
-                        const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM ubrk_words_internal(ErlNifEnv* env, int argc,
+                                 const ERL_NIF_TERM argv[]) {
     ErlNifBinary str;
-    ERL_NIF_TERM l;
+    int options;
+    ERL_NIF_TERM l, b;
     UBreakIterator* iter;
-    int brk, lastbrk = 0;
+    int status, brk, lastbrk = 0;
     UErrorCode ec = U_ZERO_ERROR;
 
     if(!enif_inspect_binary(env, argv[0], &str))
+        return enif_make_badarg(env);
+    if(!enif_get_int(env, argv[1], &options))
         return enif_make_badarg(env);
 
     iter = ubrk_open(UBRK_WORD, NULL,
@@ -69,16 +80,44 @@ ERL_NIF_TERM ubrk_words(ErlNifEnv* env, int argc,
 
     l = enif_make_list(env, 0);
     while((brk=ubrk_next(iter)) != UBRK_DONE) {
-        l = enif_make_list_cell(env,
-                                enif_make_sub_binary(env, argv[0],
-                                                     lastbrk*2,
-                                                     (brk-lastbrk)*2),
-                                l);
+        status = ubrk_getRuleStatus(iter);
+        if(! ((options & OPTION_SKIP_BREAKS) &&
+              (status >= UBRK_WORD_NONE
+               && status < UBRK_WORD_NONE_LIMIT)) ) {
+            b = enif_make_sub_binary(env, argv[0],
+                                     lastbrk*2,
+                                     (brk-lastbrk)*2);
+            if(options & OPTION_INCLUDE_TAGS) {
+                b = enif_make_tuple2(env, atom_for_tag(env, status), b);
+            }
+
+            l = enif_make_list_cell(env, b, l);
+        }
         lastbrk = brk;
     }
 
     ubrk_close(iter);
     return reverse_list(env, l);
+}
+
+ERL_NIF_TERM atom_for_tag(ErlNifEnv* env, int status) {
+    if(status >= UBRK_WORD_NONE &&
+       status < UBRK_WORD_NONE_LIMIT)
+        return enif_make_atom(env, "break");
+    else if(status >= UBRK_WORD_NUMBER &&
+            status < UBRK_WORD_NUMBER_LIMIT)
+        return enif_make_atom(env, "number");
+    else if(status >= UBRK_WORD_LETTER &&
+            status < UBRK_WORD_LETTER_LIMIT)
+        return enif_make_atom(env, "letter");
+    else if(status >= UBRK_WORD_KANA &&
+            status < UBRK_WORD_KANA_LIMIT)
+        return enif_make_atom(env, "kana");
+    else if(status >= UBRK_WORD_IDEO &&
+            status < UBRK_WORD_IDEO_LIMIT)
+        return enif_make_atom(env, "ideo");
+    else
+        return enif_make_atom(env, "error");
 }
 
 /*
