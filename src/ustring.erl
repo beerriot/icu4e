@@ -52,12 +52,13 @@
 
 -on_load(init/0).
 
+-include("icu4e.hrl").
+
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
 -define(NATIVE, {utf16, little}).
--define(UCB, unicode:characters_to_binary).
 
 init() ->
     case code:priv_dir(icu4e) of

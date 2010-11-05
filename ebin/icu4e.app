@@ -3,7 +3,8 @@
   {description, "ICU for Erlang"},
   {vsn, "1.0.0"},
   {modules, [
-             ustring
+             ustring,
+             ubrk
             ]},
   {registered, []},
   {applications, [

@@ -28,6 +28,7 @@
  * in the native endian.
  */
 #include "erl_nif_compat.h"
+#include "icu4e.h"
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
 #include "unicode/unorm.h"
@@ -46,8 +47,6 @@ ERL_NIF_TERM ustring_tolower(ErlNifEnv* env, int argc,
                              const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
                             const ERL_NIF_TERM argv[]);
-
-ERL_NIF_TERM error_tuple(ErlNifEnv* env, const char* msg);
 
 static ErlNifFunc nif_funcs[] =
 {
@@ -308,16 +307,6 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {
     return 0;
-}
-
-/*
- * Wrap up the common error-tuple creation.  Creates an error tuple
- * of the form {error, msg::string()}.
- */
-ERL_NIF_TERM error_tuple(ErlNifEnv* env, const char* msg) {
-    return enif_make_tuple2(env,
-                            enif_make_atom(env, "error"),
-                            enif_make_string(env, msg, ERL_NIF_LATIN1));
 }
 
 ERL_NIF_INIT(ustring, nif_funcs, &on_load, NULL, NULL, NULL)
