@@ -295,6 +295,7 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
         while(ubrk_next(iter) != UBRK_DONE)
             len++;
 
+        ubrk_close(iter);
         return enif_make_int(env, len);
     default: /* unknown length type */
         return enif_make_badarg(env);
