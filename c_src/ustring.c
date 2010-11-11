@@ -30,6 +30,7 @@
 #include "erl_nif_compat.h"
 #include "icu4e.h"
 #include "unicode/utypes.h"
+#include "unicode/uchar.h"
 #include "unicode/ustring.h"
 #include "unicode/unorm.h"
 #include "unicode/ubrk.h"
