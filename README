@@ -2,7 +2,7 @@
                =======================================
 
 Author: Bryan Fink <bryan@mashtun-2.local>
-Date: 2010-11-01 11:56:08 EDT
+Date: 2010-11-12 15:48:54 EST
 
 
 Table of Contents
@@ -11,6 +11,8 @@ Table of Contents
 2 Configuration 
 3 Building 
 4 Using 
+5 Troubleshooting 
+    5.1 .../as: option `-n' is ambiguous 
 
 
 1 Prerequisites 
@@ -64,3 +66,25 @@ Table of Contents
   "HELLO"
   '''
 
+5 Troubleshooting 
+~~~~~~~~~~~~~~~~~~
+
+5.1 .../as: option `-n' is ambiguous 
+=====================================
+
+   The correct way to ask 'echo' to omit its trailing newline is not
+   consistent across platforms.  If you find the build process
+   complaining about random "-n" commandline flags, edit your copy of
+   the icu-config script.  You should find two lines that look like:
+
+   ```
+   ECHO_N="-n"
+   ECHO_C=""
+   '''
+
+   Change these lines to look like this:
+
+   ```
+   ECHO_N=""
+   ECHO_C="\c"
+   '''
