@@ -38,6 +38,13 @@
 #define OPTION_SKIP_BREAKS  1
 #define OPTION_INCLUDE_TAGS 2
 
+/* Atoms (initialized in on_load) */
+static ERL_NIF_TERM ATOM_BREAK;
+static ERL_NIF_TERM ATOM_NUMBER;
+static ERL_NIF_TERM ATOM_LETTER;
+static ERL_NIF_TERM ATOM_KANA;
+static ERL_NIF_TERM ATOM_IDEO;
+
 /* Prototypes */
 ERL_NIF_TERM ubrk_words_internal(ErlNifEnv* env, int argc,
                                  const ERL_NIF_TERM argv[]);
@@ -103,19 +110,19 @@ ERL_NIF_TERM ubrk_words_internal(ErlNifEnv* env, int argc,
 ERL_NIF_TERM atom_for_tag(ErlNifEnv* env, int status) {
     if(status >= UBRK_WORD_NONE &&
        status < UBRK_WORD_NONE_LIMIT)
-        return enif_make_atom(env, "break");
+        return ATOM_BREAK;
     else if(status >= UBRK_WORD_NUMBER &&
             status < UBRK_WORD_NUMBER_LIMIT)
-        return enif_make_atom(env, "number");
+        return ATOM_NUMBER;
     else if(status >= UBRK_WORD_LETTER &&
             status < UBRK_WORD_LETTER_LIMIT)
-        return enif_make_atom(env, "letter");
+        return ATOM_LETTER;
     else if(status >= UBRK_WORD_KANA &&
             status < UBRK_WORD_KANA_LIMIT)
-        return enif_make_atom(env, "kana");
+        return ATOM_KANA;
     else if(status >= UBRK_WORD_IDEO &&
             status < UBRK_WORD_IDEO_LIMIT)
-        return enif_make_atom(env, "ideo");
+        return ATOM_IDEO;
     else
         return enif_make_atom(env, "error");
 }
@@ -125,6 +132,11 @@ ERL_NIF_TERM atom_for_tag(ErlNifEnv* env, int status) {
  */
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {
+    ATOM_BREAK = enif_make_atom(env, "break");
+    ATOM_NUMBER = enif_make_atom(env, "number");
+    ATOM_LETTER = enif_make_atom(env, "letter");
+    ATOM_KANA = enif_make_atom(env, "kana");
+    ATOM_IDEO = enif_make_atom(env, "ideo");
     return 0;
 }
 
