@@ -58,8 +58,6 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
--define(NATIVE, {utf16, little}).
-
 init() ->
     case code:priv_dir(icu4e) of
         {error, bad_name} ->
@@ -81,7 +79,11 @@ init() ->
 %%                                   utf8)
 %%      '''
 encoding() ->
-    ?NATIVE.
+    {utf16, endian()}.
+
+%% @spec endian() -> little|big
+%% @doc Check the native endian of the ICU library
+endian() -> throw("NIF library not loaded").
 
 %% @spec new(binary(), encoding()) -> ustring()|{error, term()}
 %% @type encoding() = latin1 | unicode | utf8 | utf16 | utf32 |
@@ -95,11 +97,11 @@ encoding() ->
 %%      The input Encoding may be any atom understood by the 'unicode'
 %%      Erlang module.
 new(String, Encoding) when is_binary(String); is_list(String) ->
-    case Encoding of
-        ?NATIVE ->
+    case encoding() of
+        Encoding ->
             new(String);
-        _ ->
-            new(?UCB(String, Encoding, ?NATIVE))
+        Native ->
+            new(?UCB(String, Encoding, Native))
     end.
 
 %% @spec new(ustring()) -> ustring()|{error, term()}
@@ -153,7 +155,7 @@ basic_test() ->
     Str = <<"hello">>,
     UStr = new(Str, latin1),
     %% just make sure data came through in utf16
-    ?assertEqual(Str, ?UCB(UStr, ?NATIVE, latin1)).
+    ?assertEqual(Str, ?UCB(UStr, encoding(), latin1)).
 
 %% Make sure that new/2 is normalizing inputs correctly
 norm_test() ->
@@ -163,29 +165,29 @@ norm_test() ->
     UStr1 = new(Str1, utf16),
     UStr2 = new(Str2, utf16),
     %% Str1 should be canonical - renormalization shouldn't change it
-    ?assertEqual(?UCB(Str1, utf32, ?NATIVE), UStr1),
+    ?assertEqual(?UCB(Str1, utf32, encoding()), UStr1),
     %% Str2 should canonicalize to Str1
     ?assertEqual(UStr1, UStr2).
 
 %% Check that toupper/1 up-cases basic ASCII
 upper_test() ->
     UStr = toupper(new(<<"hello">>, latin1)),
-    ?assertEqual(<<"HELLO">>, ?UCB(UStr, ?NATIVE, latin1)).
+    ?assertEqual(<<"HELLO">>, ?UCB(UStr, encoding(), latin1)).
 
 %% Check that toupper/1 up-cases basic non-ASCII Latin1
 nonascii_upper_test() ->
     UStr = toupper(new(<<"ü">>, latin1)),
-    ?assertEqual(<<"Ü">>, ?UCB(UStr, ?NATIVE, latin1)).
+    ?assertEqual(<<"Ü">>, ?UCB(UStr, encoding(), latin1)).
 
 %% Check that tolower/1 down-cases basic ASCII
 lower_test() ->
     UStr = tolower(new(<<"GOODBYE">>, latin1)),
-    ?assertEqual(<<"goodbye">>, ?UCB(UStr, ?NATIVE, latin1)).
+    ?assertEqual(<<"goodbye">>, ?UCB(UStr, encoding(), latin1)).
 
 %% Check that tolower/1 down-cases basic non-ASCII Latin1
 nonascii_lower_test() ->
     UStr = tolower(new(<<"Ä">>, latin1)),
-    ?assertEqual(?UCB(UStr, ?NATIVE, latin1), <<"ä">>).
+    ?assertEqual(?UCB(UStr, encoding(), latin1), <<"ä">>).
 
 %% Make sure cmp/2 gets basic ASCII sorting correct
 cmp_test() ->
@@ -208,7 +210,8 @@ casecmp_test() ->
 
 %% Make sure encoding/0 isn't lying
 encoding_test() ->
-    ?assertEqual(?NATIVE, encoding()).
+    {utf16, Endian} = encoding(),
+    ?assert((Endian == big) orelse (Endian == little)).
 
 %% Check the different types of length against each other
 length_test() ->
@@ -219,7 +222,7 @@ length_test() ->
     %% these strings to the same string
     %% {Latin Capital A With Acute,
     %%  Latin Captial A, Combining Acute Accent}
-    {Str1, Str2} = case ?NATIVE of
+    {Str1, Str2} = case encoding() of
                        {utf16,little} ->
                            {<<16#c1, 16#00>>,
                             <<16#41, 16#00, 16#01, 16#03>>};

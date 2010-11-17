@@ -7,18 +7,6 @@ icu4e: Erlang NIF wrappers around icu4c
   - Erlang/OTP R13B04
   - icu4c version 4.x
 
-* Configuration
-
-  The 'ustring' module is configured to encode UTF16 in little-endian
-  format.  If your ICU installation uses big-endian encoding, edit
-  ustring.erl, and change the line:
-
-  : -define(NATIVE, {utf16, little}).
-  
-  to read:
-
-  : -define(NATIVE, {utf16, big}).
-
 * Building
 
   To build icu4e, simply type 'make' at the commandline.

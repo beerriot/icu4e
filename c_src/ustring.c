@@ -35,7 +35,12 @@
 #include "unicode/unorm.h"
 #include "unicode/ubrk.h"
 
+/* Atoms (initialized in on_load) */
+static ERL_NIF_TERM ATOM_ENDIAN;
+
 /* Prototypes */
+ERL_NIF_TERM ustring_endian(ErlNifEnv* env, int argc,
+                            const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ustring_new(ErlNifEnv* env, int argc,
                          const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ustring_cmp(ErlNifEnv* env, int argc,
@@ -51,6 +56,7 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
 
 static ErlNifFunc nif_funcs[] =
 {
+    {"endian", 0, ustring_endian},
     {"new", 1, ustring_new},
     {"cmp", 2, ustring_cmp},
     {"casecmp", 2, ustring_casecmp},
@@ -58,6 +64,17 @@ static ErlNifFunc nif_funcs[] =
     {"tolower", 1, ustring_tolower},
     {"length", 2, ustring_length}
 };
+
+/*
+ * Return the endian atom, as derived in on_load
+ * Inputs: none
+ * Outputs:
+ *  atom(), either 'little' or 'big' to represent the native endian
+ */
+ERL_NIF_TERM ustring_endian(ErlNifEnv* env, int argc,
+                            const ERL_NIF_TERM argv[]) {
+    return ATOM_ENDIAN;
+}
 
 /*
  * Perform NFC normalization on the input string.
@@ -308,6 +325,11 @@ ERL_NIF_TERM ustring_length(ErlNifEnv* env, int argc,
  */
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {
+#if U_IS_BIG_ENDIAN
+    ATOM_ENDIAN = enif_make_atom(env, "big");
+#else
+    ATOM_ENDIAN = enif_make_atom(env, "little");
+#endif
     return 0;
 }
 
