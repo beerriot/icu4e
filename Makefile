@@ -1,3 +1,4 @@
+export CC=$(shell icu-config --cc)
 export ICU_CFLAGS=$(shell icu-config --cppflags-searchpath) \
                   $(shell icu-config --cflags)
 export ICU_LDFLAGS=$(shell icu-config --ldflags) \
