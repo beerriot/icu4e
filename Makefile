@@ -13,7 +13,7 @@ clean:
 	./rebar clean
 
 test:
-	./rebar eunit
+	$(shell icu-config --invoke=./rebar) eunit
 
 doc:
 	./rebar doc
